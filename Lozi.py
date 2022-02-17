@@ -6,12 +6,12 @@ Created on Wed Feb 16 16:39:08 2022
 @author: mate
 """
 
-from tkinter import Tk,Frame, Checkbutton, BooleanVar
+from tkinter import Tk,Frame, Checkbutton, BooleanVar, Scale, HORIZONTAL, Label
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
-N=1000
+N=100
 
 def InvLLike(a,b,c,d,e):
     return lambda x,y: (y/b,x-1+a*abs(y)/b)
@@ -85,7 +85,14 @@ class Loziclass(object):
         
         pts.append(self.X+t*self.Xu)
         self.extend(pts,rev=True,forward=True,N=N)
-        return np.array(pts).T
+        
+        tmp = np.array(pts).T
+        
+        tmp2 = tmp[1][(tmp[0]<3) & (tmp[0]>-3)]
+        self.maxy=tmp2.max()
+        self.miny=tmp2.min()
+        
+        return tmp
     
     def stableX(self):
         pts=[self.X]
@@ -124,7 +131,7 @@ def main():
     
     Lozi=Loziclass()
     
-    frame1 = Frame(root);
+    frame1 = Frame(root)
     figure1, ax1 = plt.subplots()
 
     frame1.place(x=0, y=0, width=720, height=720)
@@ -147,7 +154,7 @@ def main():
     stableX, = ax1.plot(*Lozi.stableX())
     stableY, = ax1.plot(*Lozi.stableY())
 
-    frame2 = Frame(root);
+    frame2 = Frame(root)
     figure2, ax2 = plt.subplots()
 
     frame2.place(x=720, y=0, width=560, height=720)
@@ -159,17 +166,75 @@ def main():
         stableY.set_visible(sYcheck.get())
         canvas1.draw()
         
+    def updateScale():
+        if autoScaleCheck.get():
+            ax1.set_ylim(Lozi.miny, Lozi.maxy)
+        else:
+            ax1.set_ylim(-3, 3)
+            
+        canvas1.draw()
         
+    def getorigin(eventorigin):
+        if eventorigin.widget == canvas2.get_tk_widget():
+            x = eventorigin.x
+            y = eventorigin.y
+            a,b = ax2.transData.inverted().transform([x,y])
+            b=ax2.get_ylim()[1]-b
+            dot2.set_data([a,b])
+
+            Lozi.update(a,b)
+            
+            aLabel['text'] = f'a={Lozi.a:.10f}'
+            bLabel['text'] = f'b={Lozi.b:.10f}'
+            
+        X.set_data(Lozi.X)
+        Y.set_data(Lozi.Y)
+        
+        unstableX.set_data(*Lozi.unstableX())
+        stableX.set_data(*Lozi.stableX())
+        unstableY.set_data(*Lozi.unstableY())
+        stableY.set_data(*Lozi.stableY())
+        
+        if autoScaleCheck.get():
+            ax1.set_ylim(Lozi.miny, Lozi.maxy)
+        
+        canvas1.draw()
+        canvas2.draw()
+        
+    def changeN(n):
+        global N
+        N=int(n)
+        unstableX.set_data(*Lozi.unstableX())
+        stableX.set_data(*Lozi.stableX())
+        unstableY.set_data(*Lozi.unstableY())
+        stableY.set_data(*Lozi.stableY())
+        
+        canvas1.draw()
+        canvas2.draw()
         
     uXcheck = BooleanVar(value=True)
     sXcheck = BooleanVar(value=True)
     uYcheck = BooleanVar(value=True)
     sYcheck = BooleanVar(value=True)
+    autoScaleCheck = BooleanVar(value=False)
+    
+    aLabel = Label(frame2, text=f'a={Lozi.a:.10f}')
+    aLabel.place(x=350,y=350)
+    bLabel = Label(frame2, text=f'b={Lozi.b:.10f}')
+    bLabel.place(x=350,y=370)
+    
+    Label(frame2, text="How many points (N)").place(x=20,y=200)
+    Nscale = Scale(frame2, tickinterval=50, length=500, from_=0, to=500, orient=HORIZONTAL, command=changeN)
+    Nscale.place(x=40,y=220)
+    
+    Nscale.set(100)
     
     Checkbutton(frame2, text='unstable X',command=updateVisibility, variable=uXcheck).place(x=20,y=300)
     Checkbutton(frame2,text='stable X',command=updateVisibility, variable=sXcheck).place(x=20,y=320)
     Checkbutton(frame2,text='unstable Y',command=updateVisibility, variable=uYcheck).place(x=20,y=340)
     Checkbutton(frame2,text='stable Y',command=updateVisibility, variable=sYcheck).place(x=20,y=360)
+    
+    Checkbutton(frame2,text='autoscale',command=updateScale, variable=autoScaleCheck).place(x=20,y=160)
 
     canvas2 = FigureCanvasTkAgg(figure2, frame2)
     canvas2.get_tk_widget().place(x=10,y=400,width=540,height=280)
@@ -178,34 +243,20 @@ def main():
     ax2.set_ylim(0, 1)
     ax2.grid()
     ax2.set(xlabel='a', ylabel='b')
-    dot2, = ax2.plot(.5,.5,'ro')
+    dot2, = ax2.plot(1,.5,'ro')
+    
+    x=np.linspace(0,3,103)
+    ax2.plot(x,abs(x-1))
+    ax2.plot(x,np.sqrt(2)*x-2)
+    ax2.plot(x,(x**2-1)/(2*x+1))
+    ax2.plot(x,4-2*x)
+    
+    
+    y=np.linspace(0,1,103)
+    ax2.plot((1+y+3*np.sqrt(1+y**2))/2,y)
+    ax2.plot(np.sqrt(3*y**2+4+np.sqrt((3*y**2+4)**2-32*y**3))/2,y)
 
-
-    def getorigin(eventorigin):
-        if eventorigin.widget == canvas2.get_tk_widget():
-            x = eventorigin.x
-            y = eventorigin.y
-            a,b = ax2.transData.inverted().transform([x,y])
-            b=ax2.get_ylim()[1]-b
-
-            Lozi.update(a,b)
-            
-            
-
-            X.set_data(Lozi.X)
-            Y.set_data(Lozi.Y)
-            
-            unstableX.set_data(*Lozi.unstableX())
-            stableX.set_data(*Lozi.stableX())
-            unstableY.set_data(*Lozi.unstableY())
-            stableY.set_data(*Lozi.stableY())
-            
-            
-            dot2.set_xdata([a,2])
-            dot2.set_ydata([b,3])
-
-            canvas1.draw()
-            canvas2.draw()
+    
 
     root.bind("<B1-Motion>",getorigin)
     root.bind("<Button-1>",getorigin)
