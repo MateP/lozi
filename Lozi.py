@@ -23,7 +23,7 @@ class Loziclass(object):
     def __init__(self, a=1,b=.5):
         super(Loziclass, self).__init__()
         self.update(a,b)
-        
+
     def update(self,a,b):
         self.a=a
         self.b=b
@@ -33,28 +33,28 @@ class Loziclass(object):
         self.Xs = np.array([-a+np.sqrt(a**2+4*b),2*b])
         self.Yu = np.array([a+np.sqrt(a**2+4*b),2*b])
         self.Ys = np.array([a-np.sqrt(a**2+4*b),2*b])
-        
+
     def L(self,pt):
         x,y=pt
         return np.array([1-self.a*abs(x)+y, self.b*x])
-    
+
     def LI(self,pt):
         x,y=pt
         return np.array([y/self.b, x-1+self.a*abs(y/self.b)])
-    
+
     def extend(self,pts,rev,forward,N):
         counter=1
         while len(pts)<N:
-            
+
             if rev:
                 pts.reverse()
-                
+
             newcounter=0
-            
+
             while counter>0:
                 counter-=1
-                
-                
+
+
                 current = pts[-1]
                 if rev:
                     index=counter
@@ -66,7 +66,7 @@ class Loziclass(object):
                 else:
                     tmp=self.LI(pts[index])
                     k=1
-                    
+
                 if tmp[k]*current[k]<0:
                     t=-current[k]/(tmp[k]-current[k])
                     new = current+t*(tmp-current)
@@ -74,81 +74,87 @@ class Loziclass(object):
                     newcounter+=1
                 pts.append(tmp)
                 newcounter+=1
-                
+
             counter = newcounter
-            
-        
-        
+
+
+
     def unstableX(self):
         pts=[self.X]
         t=-self.X[0]/self.Xu[0]
-        
+
         pts.append(self.X+t*self.Xu)
         self.extend(pts,rev=True,forward=True,N=N)
-        
+
         tmp = np.array(pts).T
-        
+
         tmp2 = tmp[1][(tmp[0]<3) & (tmp[0]>-3)]
         self.maxy=tmp2.max()
         self.miny=tmp2.min()
-        
+
         return tmp
-    
+
     def stableX(self):
         pts=[self.X]
         t=-self.X[1]/self.Xs[1]
-        
+
         pts.insert(0, self.X-10*t*self.Xs)
         pts.append(self.X+t*self.Xs)
         self.extend(pts,rev=False,forward=False,N=N)
         return np.array(pts).T
-    
+
     def unstableY(self):
         pts=[self.Y]
         t=-self.Y[0]/self.Yu[0]
-        
+
         pts.insert(0, self.Y-10*t*self.Yu)
         pts.append(self.Y+t*self.Yu)
         self.extend(pts,rev=False,forward=True,N=N)
         return np.array(pts).T
-    
+
     def stableY(self):
         pts=[self.Y]
         t=-self.Y[1]/self.Ys[1]
-        
+
         pts.append(self.Y+t*self.Ys)
         self.extend(pts,rev=True,forward=False,N=N)
         return np.array(pts).T
-        
-    
+
+
 
 
 def main():
     root = Tk()
     root.wm_title("Lozi map")
-    root.geometry('1280x720+1280+0')
-    
-    
+    screen_width=root.winfo_screenwidth()
+    # screen_width=800
+
+    screen_height = int(9*screen_width/16)
+    px_scale = screen_height
+
+    root.geometry(f'{screen_width}x{screen_height}+0+0')
+
+
     Lozi=Loziclass()
-    
+
     frame1 = Frame(root)
     figure1, ax1 = plt.subplots()
 
-    frame1.place(x=0, y=0, width=720, height=720)
+    frame1.place(x=0, y=0, width=screen_height, height=screen_height)
 
     canvas1 = FigureCanvasTkAgg(figure1, frame1)
-    canvas1.get_tk_widget().place(x=0,y=0,width=720,height=720)
+    canvas1.get_tk_widget().place(x=0,y=0,width=screen_height,height=screen_height)
 
     ax1.set_xlim(-3, 3)
     ax1.set_ylim(-3, 3)
     ax1.grid()
     ax1.set(xlabel='x', ylabel='y')
-    
+
     X, = ax1.plot(*Lozi.X,'ro')
     Y, = ax1.plot(*Lozi.Y,'go')
 
-    
-    
+
+
     unstableX, = ax1.plot(*Lozi.unstableX())
     unstableY, = ax1.plot(*Lozi.unstableY())
     stableX, = ax1.plot(*Lozi.stableX())
@@ -157,23 +163,23 @@ def main():
     frame2 = Frame(root)
     figure2, ax2 = plt.subplots()
 
-    frame2.place(x=720, y=0, width=560, height=720)
-    
+    frame2.place(x=screen_height, y=0, width=screen_width-screen_height, height=screen_height)
+
     def updateVisibility():
         unstableX.set_visible(uXcheck.get())
         stableX.set_visible(sXcheck.get())
         unstableY.set_visible(uYcheck.get())
         stableY.set_visible(sYcheck.get())
         canvas1.draw()
-        
+
     def updateScale():
         if autoScaleCheck.get():
             ax1.set_ylim(Lozi.miny, Lozi.maxy)
         else:
             ax1.set_ylim(-3, 3)
-            
+
         canvas1.draw()
-        
+
     def getorigin(eventorigin):
         if eventorigin.widget == canvas2.get_tk_widget():
             x = eventorigin.x
@@ -183,24 +189,24 @@ def main():
             dot2.set_data([a,b])
 
             Lozi.update(a,b)
-            
+
             aLabel['text'] = f'a={Lozi.a:.10f}'
             bLabel['text'] = f'b={Lozi.b:.10f}'
-            
+
         X.set_data(Lozi.X)
         Y.set_data(Lozi.Y)
-        
+
         unstableX.set_data(*Lozi.unstableX())
         stableX.set_data(*Lozi.stableX())
         unstableY.set_data(*Lozi.unstableY())
         stableY.set_data(*Lozi.stableY())
-        
+
         if autoScaleCheck.get():
             ax1.set_ylim(Lozi.miny, Lozi.maxy)
-        
+
         canvas1.draw()
         canvas2.draw()
-        
+
     def changeN(n):
         global N
         N=int(n)
@@ -208,55 +214,55 @@ def main():
         stableX.set_data(*Lozi.stableX())
         unstableY.set_data(*Lozi.unstableY())
         stableY.set_data(*Lozi.stableY())
-        
+
         canvas1.draw()
         canvas2.draw()
-        
+
     uXcheck = BooleanVar(value=True)
     sXcheck = BooleanVar(value=True)
     uYcheck = BooleanVar(value=True)
     sYcheck = BooleanVar(value=True)
     autoScaleCheck = BooleanVar(value=False)
-    
+
     aLabel = Label(frame2, text=f'a={Lozi.a:.10f}')
-    aLabel.place(x=350,y=350)
+    aLabel.place(x=int(px_scale*.5),y=int(px_scale*.45))
     bLabel = Label(frame2, text=f'b={Lozi.b:.10f}')
-    bLabel.place(x=350,y=370)
-    
-    Label(frame2, text="How many points (N)").place(x=20,y=200)
-    Nscale = Scale(frame2, tickinterval=50, length=500, from_=0, to=500, orient=HORIZONTAL, command=changeN)
-    Nscale.place(x=40,y=220)
-    
+    bLabel.place(x=int(px_scale*.5),y=int(px_scale*.5))
+
+    Label(frame2, text="How many points (N)").place(x=int(px_scale*.03),y=int(px_scale*.1))
+    Nscale = Scale(frame2, tickinterval=50, length=int(px_scale*.7), from_=0, to=500, orient=HORIZONTAL, command=changeN)
+    Nscale.place(x=int(px_scale*.03),y=int(px_scale*.15))
+
     Nscale.set(100)
-    
-    Checkbutton(frame2, text='unstable X',command=updateVisibility, variable=uXcheck).place(x=20,y=300)
-    Checkbutton(frame2,text='stable X',command=updateVisibility, variable=sXcheck).place(x=20,y=320)
-    Checkbutton(frame2,text='unstable Y',command=updateVisibility, variable=uYcheck).place(x=20,y=340)
-    Checkbutton(frame2,text='stable Y',command=updateVisibility, variable=sYcheck).place(x=20,y=360)
-    
-    Checkbutton(frame2,text='autoscale',command=updateScale, variable=autoScaleCheck).place(x=20,y=160)
+
+    Checkbutton(frame2, text='unstable X',command=updateVisibility, variable=uXcheck).place(x=int(px_scale*.03),y=int(px_scale*.3))
+    Checkbutton(frame2,text='stable X',command=updateVisibility, variable=sXcheck).place(x=int(px_scale*.03),y=int(px_scale*.35))
+    Checkbutton(frame2,text='unstable Y',command=updateVisibility, variable=uYcheck).place(x=int(px_scale*.03),y=int(px_scale*.4))
+    Checkbutton(frame2,text='stable Y',command=updateVisibility, variable=sYcheck).place(x=int(px_scale*.03),y=int(px_scale*.45))
+
+    Checkbutton(frame2,text='autoscale',command=updateScale, variable=autoScaleCheck).place(x=int(px_scale*.03),y=int(px_scale*.05))
 
     canvas2 = FigureCanvasTkAgg(figure2, frame2)
-    canvas2.get_tk_widget().place(x=10,y=400,width=540,height=280)
+    canvas2.get_tk_widget().place(x=int(px_scale*.02),y=int(px_scale*.55),width=int(px_scale*.75),height=int(px_scale*.4))
 
     ax2.set_xlim(0, 3)
     ax2.set_ylim(0, 1)
     ax2.grid()
     ax2.set(xlabel='a', ylabel='b')
     dot2, = ax2.plot(1,.5,'ro')
-    
+
     x=np.linspace(0,3,103)
     ax2.plot(x,abs(x-1))
     ax2.plot(x,np.sqrt(2)*x-2)
     ax2.plot(x,(x**2-1)/(2*x+1))
     ax2.plot(x,4-2*x)
-    
-    
+
+
     y=np.linspace(0,1,103)
     ax2.plot((1+y+3*np.sqrt(1+y**2))/2,y)
     ax2.plot(np.sqrt(3*y**2+4+np.sqrt((3*y**2+4)**2-32*y**3))/2,y)
 
-    
+
 
     root.bind("<B1-Motion>",getorigin)
     root.bind("<Button-1>",getorigin)
