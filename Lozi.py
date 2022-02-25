@@ -120,30 +120,32 @@ class Loziclass(object):
         self.extend(pts,rev=True,forward=False,N=N)
         return np.array(pts).T
 
-
-
-
 def main():
     root = Tk()
     root.wm_title("Lozi map")
-    screen_width=root.winfo_screenwidth()
-    # screen_width=800
-
+    # screen_width=root.winfo_width()
+    screen_width=800
     screen_height = int(9*screen_width/16)
-    px_scale = screen_height
-
     root.geometry(f'{screen_width}x{screen_height}+0+0')
+    
+    px_scale = screen_height
+    
+    def resize(event):
+        screen_width=root.winfo_width()
+        screen_height = int(9*screen_width/16)
+        root.geometry(f'{screen_width}x{screen_height}+0+0')
+        px_scale = screen_height
+        redraw(px_scale)
+    
+    root.bind("<Configure>", resize)
 
 
     Lozi=Loziclass()
-
+    
     frame1 = Frame(root)
     figure1, ax1 = plt.subplots()
-
-    frame1.place(x=0, y=0, width=screen_height, height=screen_height)
-
     canvas1 = FigureCanvasTkAgg(figure1, frame1)
-    canvas1.get_tk_widget().place(x=0,y=0,width=screen_height,height=screen_height)
+    
 
     ax1.set_xlim(-3, 3)
     ax1.set_ylim(-3, 3)
@@ -163,7 +165,7 @@ def main():
     frame2 = Frame(root)
     figure2, ax2 = plt.subplots()
 
-    frame2.place(x=screen_height, y=0, width=screen_width-screen_height, height=screen_height)
+    
 
     def updateVisibility():
         unstableX.set_visible(uXcheck.get())
@@ -225,25 +227,29 @@ def main():
     autoScaleCheck = BooleanVar(value=False)
 
     aLabel = Label(frame2, text=f'a={Lozi.a:.10f}')
-    aLabel.place(x=int(px_scale*.5),y=int(px_scale*.45))
+    
     bLabel = Label(frame2, text=f'b={Lozi.b:.10f}')
-    bLabel.place(x=int(px_scale*.5),y=int(px_scale*.5))
+    
 
-    Label(frame2, text="How many points (N)").place(x=int(px_scale*.03),y=int(px_scale*.1))
+    L1 = Label(frame2, text="How many points (N)")
+    
     Nscale = Scale(frame2, tickinterval=50, length=int(px_scale*.7), from_=0, to=500, orient=HORIZONTAL, command=changeN)
-    Nscale.place(x=int(px_scale*.03),y=int(px_scale*.15))
-
     Nscale.set(100)
 
-    Checkbutton(frame2, text='unstable X',command=updateVisibility, variable=uXcheck).place(x=int(px_scale*.03),y=int(px_scale*.3))
-    Checkbutton(frame2,text='stable X',command=updateVisibility, variable=sXcheck).place(x=int(px_scale*.03),y=int(px_scale*.35))
-    Checkbutton(frame2,text='unstable Y',command=updateVisibility, variable=uYcheck).place(x=int(px_scale*.03),y=int(px_scale*.4))
-    Checkbutton(frame2,text='stable Y',command=updateVisibility, variable=sYcheck).place(x=int(px_scale*.03),y=int(px_scale*.45))
+    C1=Checkbutton(frame2, text='unstable X',command=updateVisibility, variable=uXcheck)
+    
+    C2=Checkbutton(frame2,text='stable X',command=updateVisibility, variable=sXcheck)
+    
+    C3=Checkbutton(frame2,text='unstable Y',command=updateVisibility, variable=uYcheck)
+    
+    C4=Checkbutton(frame2,text='stable Y',command=updateVisibility, variable=sYcheck)
+    
 
-    Checkbutton(frame2,text='autoscale',command=updateScale, variable=autoScaleCheck).place(x=int(px_scale*.03),y=int(px_scale*.05))
+    C5=Checkbutton(frame2,text='autoscale',command=updateScale, variable=autoScaleCheck)
+    
 
     canvas2 = FigureCanvasTkAgg(figure2, frame2)
-    canvas2.get_tk_widget().place(x=int(px_scale*.02),y=int(px_scale*.55),width=int(px_scale*.75),height=int(px_scale*.4))
+    
 
     ax2.set_xlim(0, 3)
     ax2.set_ylim(0, 1)
@@ -262,7 +268,27 @@ def main():
     ax2.plot((1+y+3*np.sqrt(1+y**2))/2,y)
     ax2.plot(np.sqrt(3*y**2+4+np.sqrt((3*y**2+4)**2-32*y**3))/2,y)
 
-
+    def redraw(px_scale):
+        screen_height = px_scale
+        screen_width = int(px_scale*16/9)
+        
+        frame1.place(x=0, y=0, width=screen_height, height=screen_height)
+        canvas1.get_tk_widget().place(x=0,y=0,width=screen_height,height=screen_height)
+        frame2.place(x=screen_height, y=0, width=screen_width-screen_height, height=screen_height)
+        aLabel.place(x=int(px_scale*.5),y=int(px_scale*.45))
+        bLabel.place(x=int(px_scale*.5),y=int(px_scale*.5))
+        L1.place(x=int(px_scale*.03),y=int(px_scale*.1))
+        Nscale.place(x=int(px_scale*.03),y=int(px_scale*.15))
+        C1.place(x=int(px_scale*.03),y=int(px_scale*.3))
+        C2.place(x=int(px_scale*.03),y=int(px_scale*.35))
+        C3.place(x=int(px_scale*.03),y=int(px_scale*.4))
+        C4.place(x=int(px_scale*.03),y=int(px_scale*.45))
+        C5.place(x=int(px_scale*.03),y=int(px_scale*.05))
+        canvas2.get_tk_widget().place(x=int(px_scale*.02),y=int(px_scale*.55),width=int(px_scale*.75),height=int(px_scale*.4))
+        
+    
+    
+    redraw(px_scale)
 
     root.bind("<B1-Motion>",getorigin)
     root.bind("<Button-1>",getorigin)
