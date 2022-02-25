@@ -123,23 +123,7 @@ class Loziclass(object):
 def main():
     root = Tk()
     root.wm_title("Lozi map")
-    # screen_width=root.winfo_width()
-    screen_width=800
-    screen_height = int(9*screen_width/16)
-    root.geometry(f'{screen_width}x{screen_height}+0+0')
     
-    px_scale = screen_height
-    
-    def resize(event):
-        screen_width=root.winfo_width()
-        screen_height = int(9*screen_width/16)
-        root.geometry(f'{screen_width}x{screen_height}+0+0')
-        px_scale = screen_height
-        redraw(px_scale)
-    
-    root.bind("<Configure>", resize)
-
-
     Lozi=Loziclass()
     
     frame1 = Frame(root)
@@ -233,8 +217,8 @@ def main():
 
     L1 = Label(frame2, text="How many points (N)")
     
-    Nscale = Scale(frame2, tickinterval=50, length=int(px_scale*.7), from_=0, to=500, orient=HORIZONTAL, command=changeN)
-    Nscale.set(100)
+    Nscale = Scale(frame2, tickinterval=50, length=500, from_=0, to=500, orient=HORIZONTAL, command=changeN)
+    Nscale.set(50)
 
     C1=Checkbutton(frame2, text='unstable X',command=updateVisibility, variable=uXcheck)
     
@@ -268,9 +252,10 @@ def main():
     ax2.plot((1+y+3*np.sqrt(1+y**2))/2,y)
     ax2.plot(np.sqrt(3*y**2+4+np.sqrt((3*y**2+4)**2-32*y**3))/2,y)
 
-    def redraw(px_scale):
+    def redraw(event=None):
+        screen_width=root.winfo_width()
+        px_scale = int(9*screen_width/16)
         screen_height = px_scale
-        screen_width = int(px_scale*16/9)
         
         frame1.place(x=0, y=0, width=screen_height, height=screen_height)
         canvas1.get_tk_widget().place(x=0,y=0,width=screen_height,height=screen_height)
@@ -287,9 +272,16 @@ def main():
         canvas2.get_tk_widget().place(x=int(px_scale*.02),y=int(px_scale*.55),width=int(px_scale*.75),height=int(px_scale*.4))
         
     
+    px_scale = 720
+    screen_width=int(16*px_scale/9)
+    screen_height = px_scale
     
-    redraw(px_scale)
-
+    root.geometry(f'{screen_width}x{screen_height}+0+0')
+    
+    
+    redraw()
+    
+    root.bind("<Configure>", redraw)
     root.bind("<B1-Motion>",getorigin)
     root.bind("<Button-1>",getorigin)
 
