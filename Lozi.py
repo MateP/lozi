@@ -7,7 +7,7 @@ Created on Wed Feb 16 16:39:08 2022
 """
 
 from tkinter import Tk,Frame, Checkbutton, BooleanVar, Scale, HORIZONTAL, Label
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
@@ -127,7 +127,8 @@ def main():
     Lozi=Loziclass()
 
     frame1 = Frame(root)
-    figure1, ax1 = plt.subplots()
+    figure1 = Figure()
+    ax1 = figure1.add_subplot()
     canvas1 = FigureCanvasTkAgg(figure1, frame1)
 
 
@@ -147,7 +148,8 @@ def main():
     stableY, = ax1.plot(*Lozi.stableY())
 
     frame2 = Frame(root)
-    figure2, ax2 = plt.subplots()
+    figure2 = Figure()
+    ax2 = figure2.add_subplot()
 
 
 
