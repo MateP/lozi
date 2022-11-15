@@ -3,7 +3,7 @@
 """
 Created on Wed Feb 16 16:39:08 2022
 
-@author: mate
+@author: MateP
 """
 
 from tkinter import Tk,Frame, Checkbutton, BooleanVar, Scale, HORIZONTAL, Label
@@ -123,13 +123,13 @@ class Loziclass(object):
 def main():
     root = Tk()
     root.wm_title("Lozi map")
-    
+
     Lozi=Loziclass()
-    
+
     frame1 = Frame(root)
     figure1, ax1 = plt.subplots()
     canvas1 = FigureCanvasTkAgg(figure1, frame1)
-    
+
 
     ax1.set_xlim(-3, 3)
     ax1.set_ylim(-3, 3)
@@ -149,7 +149,7 @@ def main():
     frame2 = Frame(root)
     figure2, ax2 = plt.subplots()
 
-    
+
 
     def updateVisibility():
         unstableX.set_visible(uXcheck.get())
@@ -211,29 +211,29 @@ def main():
     autoScaleCheck = BooleanVar(value=False)
 
     aLabel = Label(frame2, text=f'a={Lozi.a:.10f}')
-    
+
     bLabel = Label(frame2, text=f'b={Lozi.b:.10f}')
-    
+
 
     L1 = Label(frame2, text="How many points (N)")
-    
+
     Nscale = Scale(frame2, tickinterval=50, length=500, from_=0, to=500, orient=HORIZONTAL, command=changeN)
     Nscale.set(50)
 
     C1=Checkbutton(frame2, text='unstable X',command=updateVisibility, variable=uXcheck)
-    
+
     C2=Checkbutton(frame2,text='stable X',command=updateVisibility, variable=sXcheck)
-    
+
     C3=Checkbutton(frame2,text='unstable Y',command=updateVisibility, variable=uYcheck)
-    
+
     C4=Checkbutton(frame2,text='stable Y',command=updateVisibility, variable=sYcheck)
-    
+
 
     C5=Checkbutton(frame2,text='autoscale',command=updateScale, variable=autoScaleCheck)
-    
+
 
     canvas2 = FigureCanvasTkAgg(figure2, frame2)
-    
+
 
     ax2.set_xlim(0, 3)
     ax2.set_ylim(0, 1)
@@ -256,7 +256,7 @@ def main():
         screen_width=root.winfo_width()
         px_scale = int(9*screen_width/16)
         screen_height = px_scale
-        
+
         frame1.place(x=0, y=0, width=screen_height, height=screen_height)
         canvas1.get_tk_widget().place(x=0,y=0,width=screen_height,height=screen_height)
         frame2.place(x=screen_height, y=0, width=screen_width-screen_height, height=screen_height)
@@ -270,17 +270,17 @@ def main():
         C4.place(x=int(px_scale*.03),y=int(px_scale*.45))
         C5.place(x=int(px_scale*.03),y=int(px_scale*.05))
         canvas2.get_tk_widget().place(x=int(px_scale*.02),y=int(px_scale*.55),width=int(px_scale*.75),height=int(px_scale*.4))
-        
-    
+
+
     px_scale = 720
     screen_width=int(16*px_scale/9)
     screen_height = px_scale
-    
+
     root.geometry(f'{screen_width}x{screen_height}+0+0')
-    
-    
+
+
     redraw()
-    
+
     root.bind("<Configure>", redraw)
     root.bind("<B1-Motion>",getorigin)
     root.bind("<Button-1>",getorigin)
